@@ -1,5 +1,14 @@
-const div = document.createElement('div');
+// クエリセレクタ()
+const $ = (selector, scope = document) => {
+    const el = scope.querySelector(selector);
+    if(!el) console.log(`selector "${selector}" not found.`);
+    return el;
+}
 
-div.textContent = 'new content';
+const $$ = (selector, scope = document) => {
+    Array.from(scope.querySelectorAll(selector));
+}
 
-document.body.appendChild(div);
+const on = (el, event, handler, options = false)=> {
+    if(el) el.addEventListener(event, handler, options)
+}
