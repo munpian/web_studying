@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ハンバーガーメニュー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ハンバーガーボタン -->
+  <div class="hamburger" id="hamburger">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+   <!-- オーバーレイ -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- メニュー -->
+  <div class="menu-container" id="menu">
+    <div class="user-info">
+      ID: 123456<br>
+      名前: 瀧口 歩
+    </div>
+    <div class="menu-item" data-action="action1">例Ⅰ</div>
+    <div class="menu-item" data-action="action2">例Ⅱ</div>
+    <div class="menu-item" data-action="action3">例Ⅲ</div>
+    <div class="menu-item" data-action="action4">例Ⅳ</div>
+    <div class="logout" data-action="logout">ログアウト</div>
+  </div>
+
+  <script src="hamburger.js"></script>
+</body>
+</html>
