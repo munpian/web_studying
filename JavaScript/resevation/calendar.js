@@ -31,7 +31,7 @@ function createCalendar(year, month){
     row.appendChild(document.createElement('td'));
   }
 
-  for(let date = 1; date <= lastDay.getDate(); date){
+  for(let date = 1; date <= lastDay.getDate(); date++){
     const day = new Date(year, month, date).getDay();
     const td = document.createElement('td');
     td.textContent = date;
@@ -42,6 +42,8 @@ function createCalendar(year, month){
       row = document.createElement('tr');
     }
   }
+  console.log("lastDay.getDate()", lastDay.getDate())
+  console.log("lastDay", lastDay);
 }
 
 createCalendar(year, month);
