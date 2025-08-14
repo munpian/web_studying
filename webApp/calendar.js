@@ -1,175 +1,288 @@
 class DatePicker extends HTMLElement {
-  constructor() {
-    super();
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
 
-    this.currentDate = new Date();
+        this.currentDate = new Date();
+        this.selectedYear = this.currentDate.getFullYear();
+        this.selectedMonth = this.currentDate.getMonth();
+        this.selectedDay = this.currentDate.getDate();
 
-    const shadow = this.attachShadow({ mode: 'open' });
+        this.viewMode = 'day';
+        this.startYear = this.selectedYear - (this.selectedYear % 12);
 
-    // スタイル
-    const style = document.createElement('style');
-    style.textContent = `
-      .wrapper {
-        position: relative;
-        font-family: sans-serif;
-      }
-      input {
-        padding: 5px;
-        width: 160px;
-      }
-      .calendar {
-        display: none;
-        position: absolute;
-        top: 30px;
-        left: 0;
-        background: white;
-        border: 1px solid #ccc;
-        padding: 5px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        z-index: 10;
-      }
-      table {
-        border-collapse: collapse;
-        width: 100%;
-      }
-      th, td {
-        text-align: center;
-        padding: 4px;
-        cursor: pointer;
-      }
-      td:hover {
-        background: #eee;
-      }
-      .nav {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 5px;
-      }
-      .nav button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 16px;
-      }
-    `;
+        const style = document.createElement('style');
+        style.textContent = `
+            .wrapper { position: relative; display: inline-block; font-family: sans-serif; }
+            input { width: 150px; padding: 4px; }
+            .icon { cursor: pointer; margin-left: -24px; }
+            .popup { position: absolute; top: 28px; left: 0; background: white; border: 1px solid #ccc; padding: 8px; z-index: 100; }
+            .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+            .nav { text-align: center; margin-bottom: 8px; font-weight: bold; }
+            .nav span { cursor: pointer; padding: 0 4px; }
+            .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+            button { padding: 4px; cursor: pointer; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { text-align: center; padding: 4px; }
+            th { background: #f0f0f0; }
+            td { cursor: pointer; }
+            td.empty { background: #f9f9f9; cursor: default; }
+        `;
+        this.shadowRoot.appendChild(style);
 
-    // wrapper
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('wrapper');
+        this.wrapper = document.createElement('div');
+        this.wrapper.classList.add('wrapper');
 
-    // input
-    this.input = document.createElement('input');
-    this.input.type = 'text';
-    this.input.readOnly = true;
-    this.input.placeholder = '日付を選択';
+        this.input = document.createElement('input');
+        this.input.type = 'text';
+        this.input.readOnly = true;
+        this.input.value = this.formatDate(this.currentDate);
 
-    // calendar container
-    this.calendar = document.createElement('div');
-    this.calendar.classList.add('calendar');
+        this.icon = document.createElement('span');
+        this.icon.textContent = '📅';
+        this.icon.classList.add('icon');
 
-    // 組み立て
-    wrapper.appendChild(this.input);
-    wrapper.appendChild(this.calendar);
-    shadow.appendChild(style);
-    shadow.appendChild(wrapper);
+        this.popup = document.createElement('div');
+        this.popup.classList.add('popup');
+        this.popup.style.display = 'none';
 
-    // イベント
-    this.input.addEventListener('click', () => this.toggleCalendar());
-    document.addEventListener('click', (e) => this.handleOutsideClick(e));
+        this.wrapper.appendChild(this.input);
+        this.wrapper.appendChild(this.icon);
+        this.wrapper.appendChild(this.popup);
+        this.shadowRoot.appendChild(this.wrapper);
 
-    this.buildCalendar(this.currentDate);
-  }
+        this.icon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.togglePopup(true);
+        });
 
-  toggleCalendar() {
-    this.calendar.style.display = this.calendar.style.display === 'block' ? 'none' : 'block';
-  }
+        // 外部クリック判定（内部は閉じない）
+        document.addEventListener('click', (e) => {
+            const clickedInside = this.shadowRoot.contains(e.target) || this.contains(e.target);
+            if (!clickedInside) {
+                this.togglePopup(false);
+            }
+        });
 
-  handleOutsideClick(e) {
-    if (!this.contains(e.target)) {
-      this.calendar.style.display = 'none';
-    }
-  }
-
-  buildCalendar(date) {
-    this.calendar.innerHTML = ''; // 初期化
-
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const startDay = firstDay.getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // ナビゲーションバー（前月・月名・次月）
-    const nav = document.createElement('div');
-    nav.className = 'nav';
-
-    const prevBtn = document.createElement('button');
-    prevBtn.textContent = '<';
-    prevBtn.addEventListener('click', () => {
-      this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-      this.buildCalendar(this.currentDate);
-    });
-
-    const nextBtn = document.createElement('button');
-    nextBtn.textContent = '>';
-    nextBtn.addEventListener('click', () => {
-      this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-      this.buildCalendar(this.currentDate);
-    });
-
-    const title = document.createElement('span');
-    title.textContent = `${year}年 ${month + 1}月`;
-
-    nav.appendChild(prevBtn);
-    nav.appendChild(title);
-    nav.appendChild(nextBtn);
-    this.calendar.appendChild(nav);
-
-    // カレンダーテーブル
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-
-    const days = ['日', '月', '火', '水', '木', '金', '土'];
-    days.forEach(day => {
-      const th = document.createElement('th');
-      th.textContent = day;
-      headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-
-    const tbody = document.createElement('tbody');
-    let row = document.createElement('tr');
-
-    // 空白セル
-    for (let i = 0; i < startDay; i++) {
-      row.appendChild(document.createElement('td'));
+        this.render();
     }
 
-    // 日付セル
-    for (let day = 1; day <= daysInMonth; day++) {
-      const td = document.createElement('td');
-      td.textContent = String(day);
-      td.addEventListener('click', () => {
-        const selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        this.input.value = selectedDate;
-        this.calendar.style.display = 'none';
-      });
-
-      row.appendChild(td);
-
-      if ((startDay + day) % 7 === 0 || day === daysInMonth) {
-        tbody.appendChild(row);
-        row = document.createElement('tr');
-      }
+    formatDate(date) {
+        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
     }
 
-    table.appendChild(tbody);
-    this.calendar.appendChild(table);
-  }
+    togglePopup(show) {
+        this.popup.style.display = show ? 'block' : 'none';
+    }
+
+    render() {
+        this.popup.innerHTML = '';
+        this.createNavigation();
+        if (this.viewMode === 'year') {
+            this.createYearView();
+        } else if (this.viewMode === 'month') {
+            this.createMonthView();
+        } else {
+            this.createDayView();
+        }
+    }
+
+    createNavigation() {
+        const nav = document.createElement('div');
+        nav.classList.add('nav');
+
+        const yearSpan = document.createElement('span');
+        yearSpan.textContent = `${this.selectedYear}年`;
+        yearSpan.addEventListener('click', () => {
+            this.viewMode = 'year';
+            this.startYear = this.selectedYear - (this.selectedYear % 12);
+            this.render();
+        });
+
+        const monthSpan = document.createElement('span');
+        monthSpan.textContent = `${this.selectedMonth + 1}月`;
+        monthSpan.addEventListener('click', () => {
+            this.viewMode = 'month';
+            this.render();
+        });
+
+        const daySpan = document.createElement('span');
+        daySpan.textContent = `${this.selectedDay}日`;
+
+        nav.appendChild(yearSpan);
+        nav.appendChild(monthSpan);
+        nav.appendChild(daySpan);
+
+        this.popup.appendChild(nav);
+    }
+
+    createYearView() {
+        const header = document.createElement('div');
+        header.classList.add('header');
+
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '←';
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.startYear -= 12;
+            this.render();
+        });
+
+        const title = document.createElement('span');
+        title.textContent = `${this.startYear}年 - ${this.startYear + 11}年`;
+
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '→';
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.startYear += 12;
+            this.render();
+        });
+
+        header.appendChild(prevBtn);
+        header.appendChild(title);
+        header.appendChild(nextBtn);
+        this.popup.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.classList.add('grid');
+        for (let y = this.startYear; y < this.startYear + 12; y++) {
+            const btn = document.createElement('button');
+            btn.textContent = `${y}年`;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.selectedYear = y;
+                this.viewMode = 'month';
+                this.render();
+            });
+            grid.appendChild(btn);
+        }
+        this.popup.appendChild(grid);
+    }
+
+    createMonthView() {
+        const header = document.createElement('div');
+        header.classList.add('header');
+
+        const backBtn = document.createElement('button');
+        backBtn.textContent = '← 年選択';
+        backBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.viewMode = 'year';
+            this.startYear = this.selectedYear - (this.selectedYear % 12);
+            this.render();
+        });
+
+        const title = document.createElement('span');
+        title.textContent = `${this.selectedYear}年`;
+
+        header.appendChild(backBtn);
+        header.appendChild(title);
+        this.popup.appendChild(header);
+
+        const grid = document.createElement('div');
+        grid.classList.add('grid');
+        for (let m = 0; m < 12; m++) {
+            const btn = document.createElement('button');
+            btn.textContent = `${m + 1}月`;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.selectedMonth = m;
+                this.viewMode = 'day';
+                this.render();
+            });
+            grid.appendChild(btn);
+        }
+        this.popup.appendChild(grid);
+    }
+
+    createDayView() {
+        const header = document.createElement('div');
+        header.classList.add('header');
+
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = '←';
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.selectedMonth--;
+            if (this.selectedMonth < 0) {
+                this.selectedMonth = 11;
+                this.selectedYear--;
+            }
+            this.render();
+        });
+
+        const title = document.createElement('span');
+        title.textContent = `${this.selectedYear}年${this.selectedMonth + 1}月`;
+
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '→';
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.selectedMonth++;
+            if (this.selectedMonth > 11) {
+                this.selectedMonth = 0;
+                this.selectedYear++;
+            }
+            this.render();
+        });
+
+        header.appendChild(prevBtn);
+        header.appendChild(title);
+        header.appendChild(nextBtn);
+        this.popup.appendChild(header);
+
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const trHead = document.createElement('tr');
+        ['日', '月', '火', '水', '木', '金', '土'].forEach(d => {
+            const th = document.createElement('th');
+            th.textContent = d;
+            trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const firstDay = new Date(this.selectedYear, this.selectedMonth, 1);
+        const startDay = firstDay.getDay();
+        const daysInMonth = new Date(this.selectedYear, this.selectedMonth + 1, 0).getDate();
+
+        let row = document.createElement('tr');
+        for (let i = 0; i < startDay; i++) {
+            const td = document.createElement('td');
+            td.classList.add('empty');
+            row.appendChild(td);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const td = document.createElement('td');
+            td.textContent = d;
+            td.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.selectedDay = d;
+                this.input.value = this.formatDate(new Date(this.selectedYear, this.selectedMonth, d));
+                this.togglePopup(false);
+            });
+            row.appendChild(td);
+            if ((startDay + d) % 7 === 0) {
+                tbody.appendChild(row);
+                row = document.createElement('tr');
+            }
+        }
+
+        if (row.children.length > 0) {
+            while (row.children.length < 7) {
+                const td = document.createElement('td');
+                td.classList.add('empty');
+                row.appendChild(td);
+            }
+            tbody.appendChild(row);
+        }
+
+        table.appendChild(tbody);
+        this.popup.appendChild(table);
+    }
 }
 
 customElements.define('date-picker', DatePicker);
