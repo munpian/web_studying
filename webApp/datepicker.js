@@ -1,18 +1,13 @@
-function DatePicker() {
-    return Reflect.construct(HTMLElement, [], DatePicker);
-}
-DatePicker.prototype = Object.create(HTMLElement.prototype);
-DatePicker.prototype.constructor = DatePicker;
+window.DatePicker = function() { return Reflect.construct(HTMLElement, [], window.DatePicker); };
+window.DatePicker.prototype = Object.create(HTMLElement.prototype);
+window.DatePicker.prototype.constructor = window.DatePicker;
 
-DatePicker.prototype.connectedCallback = function () {
+window.DatePicker.prototype.connectedCallback = function() {
     this.attachShadow({ mode: 'open' });
 
     const today = new Date();
-    const attrYear = parseInt(this.getAttribute('year'), 10);
-    const attrMonth = parseInt(this.getAttribute('month'), 10);
-
-    this.selectedYear = (!isNaN(attrYear) && attrYear >= 1900) ? attrYear : today.getFullYear();
-    this.selectedMonth = (!isNaN(attrMonth) && attrMonth >= 1 && attrMonth <= 12) ? (attrMonth - 1) : today.getMonth();
+    this.selectedYear = today.getFullYear();
+    this.selectedMonth = today.getMonth();
     this.selectedDay = today.getDate();
     this.currentDate = new Date(this.selectedYear, this.selectedMonth, this.selectedDay);
 
@@ -41,45 +36,42 @@ DatePicker.prototype.connectedCallback = function () {
     this.shadowRoot.appendChild(this.wrapper);
     this.shadowRoot.appendChild(DatePickerStyle());
 
-    this.icon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.togglePopup(true);
-    });
+    this.icon.addEventListener('click', (e)=>{ e.stopPropagation(); this.togglePopup(true); });
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', (e)=>{
         const clickedInside = this.shadowRoot.contains(e.target) || this.contains(e.target);
-        if (!clickedInside) this.togglePopup(false);
+        if(!clickedInside) this.togglePopup(false);
     });
 
     this.render();
 };
 
-DatePicker.prototype.togglePopup = function (show) {
+window.DatePicker.prototype.togglePopup = function(show){
     this.popup.style.display = show ? 'block' : 'none';
 };
 
-DatePicker.prototype.render = function () {
+window.DatePicker.prototype.render = function(){
     this.popup.innerHTML = '';
     const nav = document.createElement('div');
     nav.classList.add('nav');
 
     const yearSpan = document.createElement('span');
     yearSpan.textContent = this.selectedYear + '年';
-    yearSpan.addEventListener('click', () => { this.viewMode = 'year'; this.render(); });
+    yearSpan.addEventListener('click', ()=>{ this.viewMode='year'; this.render(); });
 
     const monthSpan = document.createElement('span');
-    monthSpan.textContent = (this.selectedMonth + 1) + '月';
-    monthSpan.addEventListener('click', () => { this.viewMode = 'month'; this.render(); });
+    monthSpan.textContent = (this.selectedMonth+1)+'月';
+    monthSpan.addEventListener('click', ()=>{ this.viewMode='month'; this.render(); });
 
     const daySpan = document.createElement('span');
-    daySpan.textContent = this.selectedDay + '日';
+    daySpan.textContent = this.selectedDay+'日';
 
     nav.appendChild(yearSpan);
     nav.appendChild(monthSpan);
     nav.appendChild(daySpan);
     this.popup.appendChild(nav);
 
-    if (this.viewMode === 'year') this.popup.appendChild(createYearView(this));
-    else if (this.viewMode === 'month') this.popup.appendChild(createMonthView(this));
+    if(this.viewMode==='year') this.popup.appendChild(createYearView(this));
+    else if(this.viewMode==='month') this.popup.appendChild(createMonthView(this));
     else this.popup.appendChild(createDayView(this));
 };

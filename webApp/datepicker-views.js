@@ -6,22 +6,14 @@ function createYearView(dp) {
 
     const prevBtn = document.createElement('button');
     prevBtn.textContent = '←';
-    prevBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dp.startYear -= 12;
-        dp.render();
-    });
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); dp.startYear -= 12; dp.render(); });
 
     const title = document.createElement('span');
     title.textContent = `${dp.startYear}年 - ${dp.startYear + 11}年`;
 
     const nextBtn = document.createElement('button');
     nextBtn.textContent = '→';
-    nextBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dp.startYear += 12;
-        dp.render();
-    });
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); dp.startYear += 12; dp.render(); });
 
     header.appendChild(prevBtn);
     header.appendChild(title);
@@ -33,12 +25,7 @@ function createYearView(dp) {
     for (let y = dp.startYear; y < dp.startYear + 12; y++) {
         const btn = document.createElement('button');
         btn.textContent = y + '年';
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dp.selectedYear = y;
-            dp.viewMode = 'month';
-            dp.render();
-        });
+        btn.addEventListener('click', (e) => { e.stopPropagation(); dp.selectedYear = y; dp.viewMode = 'month'; dp.render(); });
         grid.appendChild(btn);
     }
     container.appendChild(grid);
@@ -53,12 +40,7 @@ function createMonthView(dp) {
 
     const backBtn = document.createElement('button');
     backBtn.textContent = '← 年選択';
-    backBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dp.viewMode = 'year';
-        dp.startYear = dp.selectedYear - (dp.selectedYear % 12);
-        dp.render();
-    });
+    backBtn.addEventListener('click', (e) => { e.stopPropagation(); dp.viewMode = 'year'; dp.startYear = dp.selectedYear - (dp.selectedYear % 12); dp.render(); });
 
     const title = document.createElement('span');
     title.textContent = dp.selectedYear + '年';
@@ -71,12 +53,7 @@ function createMonthView(dp) {
     for (let m = 0; m < 12; m++) {
         const btn = document.createElement('button');
         btn.textContent = (m + 1) + '月';
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dp.selectedMonth = m;
-            dp.viewMode = 'day';
-            dp.render();
-        });
+        btn.addEventListener('click', (e) => { e.stopPropagation(); dp.selectedMonth = m; dp.viewMode = 'day'; dp.render(); });
         grid.appendChild(btn);
     }
     container.appendChild(grid);
@@ -94,10 +71,7 @@ function createDayView(dp) {
     prevBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         dp.selectedMonth--;
-        if (dp.selectedMonth < 0) {
-            dp.selectedMonth = 11;
-            dp.selectedYear--;
-        }
+        if (dp.selectedMonth < 0) { dp.selectedMonth = 11; dp.selectedYear--; }
         dp.render();
     });
 
@@ -109,10 +83,7 @@ function createDayView(dp) {
     nextBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         dp.selectedMonth++;
-        if (dp.selectedMonth > 11) {
-            dp.selectedMonth = 0;
-            dp.selectedYear++;
-        }
+        if (dp.selectedMonth > 11) { dp.selectedMonth = 0; dp.selectedYear++; }
         dp.render();
     });
 
@@ -124,11 +95,7 @@ function createDayView(dp) {
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const trHead = document.createElement('tr');
-    ['日', '月', '火', '水', '木', '金', '土'].forEach(d => {
-        const th = document.createElement('th');
-        th.textContent = d;
-        trHead.appendChild(th);
-    });
+    ['日','月','火','水','木','金','土'].forEach(d => { const th = document.createElement('th'); th.textContent = d; trHead.appendChild(th); });
     thead.appendChild(trHead);
     table.appendChild(thead);
 
@@ -138,36 +105,16 @@ function createDayView(dp) {
     const daysInMonthVal = daysInMonth(dp.selectedYear, dp.selectedMonth);
 
     let row = document.createElement('tr');
-    for (let i = 0; i < startDay; i++) {
-        const td = document.createElement('td');
-        td.classList.add('empty');
-        row.appendChild(td);
-    }
+    for (let i = 0; i < startDay; i++) { const td = document.createElement('td'); td.classList.add('empty'); row.appendChild(td); }
 
     for (let d = 1; d <= daysInMonthVal; d++) {
         const td = document.createElement('td');
         td.textContent = d;
-        td.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dp.selectedDay = d;
-            dp.input.value = formatDate(new Date(dp.selectedYear, dp.selectedMonth, d));
-            dp.togglePopup(false);
-        });
+        td.addEventListener('click', (e) => { e.stopPropagation(); dp.selectedDay = d; dp.input.value = formatDate(new Date(dp.selectedYear, dp.selectedMonth, d)); dp.togglePopup(false); });
         row.appendChild(td);
-        if ((startDay + d) % 7 === 0) {
-            tbody.appendChild(row);
-            row = document.createElement('tr');
-        }
+        if ((startDay + d) % 7 === 0) { tbody.appendChild(row); row = document.createElement('tr'); }
     }
-
-    if (row.children.length > 0) {
-        while (row.children.length < 7) {
-            const td = document.createElement('td');
-            td.classList.add('empty');
-            row.appendChild(td);
-        }
-        tbody.appendChild(row);
-    }
+    if (row.children.length > 0) { while(row.children.length < 7){ const td = document.createElement('td'); td.classList.add('empty'); row.appendChild(td); } tbody.appendChild(row); }
 
     table.appendChild(tbody);
     container.appendChild(table);
