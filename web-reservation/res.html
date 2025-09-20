@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reservation register form</title>
+</head>
+<body>
+    <h2>会議室予約登録</h2>
+
+    <div class="register-form">
+        <div class="form-section">
+            <label>予約タイプ:</label>
+            <input type="radio" name="reservation-type" value="single" checked> 単体もしくは複数日
+            <input type="radio" name="reservation-type" value="repeat"> 繰り返し
+        </div>
+
+        <div class="form-section">
+            <label>会議室:</label>
+            <input type="text" value="101会議室" readonly>
+        </div>
+
+        <div id="single-reservation-view" class="form-section"></div>
+        <div id="repeat-reservation-view" class="form-section"></div>
+        <div id="equipment-container-view" class="form-section"></div>
+        <div id="btn-container" class="btn-container"></div>
+    </div>
+</body>
+</html>
